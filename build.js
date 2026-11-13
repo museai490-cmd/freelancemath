@@ -135,7 +135,23 @@ const T = [
   u:'Freelancers offering clients a fixed monthly block of hours at a discounted rate.',
   x:'Full price = hours × hourly rate. Discount = full price × discount %. Retainer = full price − discount.',
   l:'The discount is the only benefit priced here — it does not value the income stability a retainer brings.',
-  q:[['Why discount a retainer?','Clients pay for guaranteed hours in advance, so a small discount is common in exchange for that certainty.'],['What if hours go unused?','Agree in advance whether unused hours roll over, expire, or are refunded.']]}
+  q:[['Why discount a retainer?','Clients pay for guaranteed hours in advance, so a small discount is common in exchange for that certainty.'],['What if hours go unused?','Agree in advance whether unused hours roll over, expire, or are refunded.']]},
+{ s:'discount-calculator', t:'Discount Calculator', c:'Pricing',
+  d:'Work out the discount amount and the final price after a percentage discount.',
+  f:[['price','Original price',200],['disc','Discount (%)',25]],
+  fn:v=>{need(v.price>0,'Original price must be above zero.');need(v.disc>=0&&v.disc<100,'Discount must be between 0% and 100%.');var d=v.price*v.disc/100;return [['Discount amount',m(d)],['Price after discount',m(v.price-d)],['Discount',p(v.disc)]]},
+  u:'Freelancers quoting a discounted price or checking a supplier discount.',
+  x:'Discount = original price × discount %. Final price = original price − discount.',
+  l:'This is a simple percentage discount. It does not include taxes or extra fees.',
+  q:[['Can the discount be over 100%?','No — a discount of 100% or more would make the price zero or negative.'],['Does it include tax?','No. Apply the discount first, then add tax to the discounted price if needed.']]},
+{ s:'tax-set-aside-calculator', t:'Freelance Tax Set-Aside Calculator', c:'Business',
+  d:'Work out how much of each payment to set aside for tax and how much you keep.',
+  f:[['amt','Payment amount',5000],['rate','Tax set-aside rate (%)',20]],
+  fn:v=>{need(v.amt>0,'Payment amount must be above zero.');need(v.rate>=0&&v.rate<100,'Set-aside rate must be between 0% and 100%.');var s=v.amt*v.rate/100;return [['Set aside for tax',m(s)],['You keep',m(v.amt-s)],['Set-aside rate',p(v.rate)]]},
+  u:'Freelancers putting aside a share of every payment so tax bills never surprise them.',
+  x:'Set aside = payment × set-aside rate %. You keep = payment − set aside.',
+  l:'The set-aside rate is a flat percentage you choose, not a tax calculation. Your real tax depends on local rules and deductions.',
+  q:[['What rate should I use?','Many freelancers use 20–30% as a starting point and adjust after their first tax year.'],['Where should the set-aside go?','A separate bank account works best, so the money is there when the tax bill arrives.']]}
 ];
 
 // --- self-test (build fails if a tool is wrong) ---
@@ -157,6 +173,10 @@ near(num(run('late-fee-calculator')[0][1]), 22.5, .001, 'late fee');
 near(num(run('cash-runway-calculator')[0][1]), 4, .001, 'runway');
 near(num(run('utilization-rate-calculator')[0][1]), 62.5, .001, 'utilization');
 near(num(run('retainer-pricing-calculator')[2][1]), 900, .001, 'retainer');
+near(num(run('discount-calculator')[0][1]), 50, .001, 'discount');
+near(num(run('discount-calculator')[1][1]), 150, .001, 'discount final');
+near(num(run('tax-set-aside-calculator')[0][1]), 1000, .001, 'tax set-aside');
+near(num(run('tax-set-aside-calculator')[1][1]), 4000, .001, 'tax keep');
 try { run('break-even-calculator', { price: 5 }); throw Error('TEST FAIL guard'); } catch (e) { if (/TEST FAIL/.test(e.message)) throw e; }
 console.log('All tool self-tests passed.');
 
@@ -217,12 +237,15 @@ page('/tools/', `All Tools – Free Freelancer & Money Calculators | ${NAME}`, '
   `<h1>All tools</h1><label for="q">Search tools</label><input type="search" id="q" placeholder="e.g. hourly rate, loan, margin"><div class="chips" role="group" aria-label="Filter by category"><button type="button" class="s" aria-pressed="true" data-k="">All</button>${cats.map(c => `<button type="button" class="s" aria-pressed="false" data-k="${c}">${c}</button>`).join('')}</div><p id="none" hidden>No tools match your search.</p><ul class="g" id="list">${T.map(card).join('')}</ul>`, [],
   `var q=document.getElementById('q'),k='',L=[].slice.call(document.querySelectorAll('#list a'));function f(){var s=q.value.toLowerCase().trim(),n=0;L.forEach(function(a){var ok=(!k||a.dataset.c===k)&&(!s||a.dataset.n.indexOf(s)>-1);a.parentNode.hidden=!ok;if(ok)n++});document.getElementById('none').hidden=n>0}q.oninput=f;[].forEach.call(document.querySelectorAll('.chips button'),function(b){b.onclick=function(){k=b.dataset.k;[].forEach.call(document.querySelectorAll('.chips button'),function(x){x.setAttribute('aria-pressed',x===b)});f()}});var m=location.search.match(/[?&]q=([^&]*)/);if(m){q.value=decodeURIComponent(m[1].replace(/\\+/g,' '));f()}`);
 
+// Donate (USDT on BNB Smart Chain, BEP20)
+const DONATE = `<h2>Support FreelanceMath</h2><p>FreelanceMath is free to use. If these tools helped you, you can support the site with a USDT tip.</p><section class="tool" aria-label="Donate with USDT"><label for="usdt">USDT address (BNB Smart Chain, BEP20 only)</label><input type="text" id="usdt" readonly value="0xafedc8692eddd549978fec5f20c6b6ed6d0904bf"><div class="row"><button id="cpusdt" type="button">Copy address</button></div><p><small>Send USDT on BNB Smart Chain (BEP20) only. Do not send other coins or use other networks — they will be lost.</small></p></section><script>document.getElementById('cpusdt').onclick=function(){var a=document.getElementById('usdt');a.select();(navigator.clipboard?navigator.clipboard.writeText(a.value):Promise.reject()).then(function(){document.getElementById('cpusdt').textContent='Copied'},function(){document.getElementById('cpusdt').textContent='Copy failed'});setTimeout(function(){document.getElementById('cpusdt').textContent='Copy address'},1500)};</script>`;
+
 // Home
 page('/', `${NAME} – Free Calculators for Freelancers & Small Businesses`, 'Free, private calculators for freelancers: hourly rate, project quotes, margins, break-even, invoices, loans and savings. No sign-up.',
   `<section class="hero"><h1>Price your work with numbers you can check.</h1><p>${T.length} free calculators for freelancers and small-business owners. Every formula is shown, every calculation runs in your browser, and there is nothing to sign up for.</p><form action="/tools/" method="get" role="search"><label for="hq">Find a tool</label><div class="row" style="margin-top:0"><input type="search" id="hq" name="q" placeholder="e.g. hourly rate" style="flex:1"><button>Search</button></div></form></section>
 <h2>Popular tools</h2><ul class="g">${T.slice(0, 6).map(card).join('')}</ul><p><a href="/tools/">See all ${T.length} tools</a></p>${AD}
 ${cats.map(c => `<h2>${c}</h2><ul class="g">${T.filter(t => t.c === c).map(card).join('')}</ul>`).join('')}
-<h2>Why these tools</h2><p>Freelancers often set prices by guesswork. These calculators turn income goals, costs and time into concrete figures, and each page explains the formula and its limits so you can judge the result yourself.</p>`,
+<h2>Why these tools</h2><p>Freelancers often set prices by guesswork. These calculators turn income goals, costs and time into concrete figures, and each page explains the formula and its limits so you can judge the result yourself.</p>${DONATE}`,
   [{ '@context': 'https://schema.org', '@type': 'WebSite', name: NAME, url: SITE + '/', potentialAction: { '@type': 'SearchAction', target: SITE + '/tools/?q={q}', 'query-input': 'required name=q' } }]);
 
 // Legal & info pages
