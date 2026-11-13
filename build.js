@@ -151,7 +151,23 @@ const T = [
   u:'Freelancers putting aside a share of every payment so tax bills never surprise them.',
   x:'Set aside = payment × set-aside rate %. You keep = payment − set aside.',
   l:'The set-aside rate is a flat percentage you choose, not a tax calculation. Your real tax depends on local rules and deductions.',
-  q:[['What rate should I use?','Many freelancers use 20–30% as a starting point and adjust after their first tax year.'],['Where should the set-aside go?','A separate bank account works best, so the money is there when the tax bill arrives.']]}
+  q:[['What rate should I use?','Many freelancers use 20–30% as a starting point and adjust after their first tax year.'],['Where should the set-aside go?','A separate bank account works best, so the money is there when the tax bill arrives.']]},
+{ s:'subscription-churn-calculator', t:'Subscription Churn Calculator', c:'Business',
+  d:'See how many subscribers remain after monthly churn, and how many you lose.',
+  f:[['start','Starting subscribers',100],['churn','Monthly churn rate (%)',5],['months','Months',12]],
+  fn:v=>{need(v.start>0,'Starting subscribers must be above zero.');need(v.churn>=0&&v.churn<100,'Churn rate must be between 0% and 100%.');need(v.months>=0,'Months cannot be negative.');var r=v.start*Math.pow(1-v.churn/100,v.months);return [['Subscribers remaining',m(r)],['Subscribers lost',m(v.start-r)],['Retention rate',p(r/v.start*100)]]},
+  u:'Freelancers and small businesses with subscriptions or retainer clients tracking churn.',
+  x:'Remaining = starting subscribers × (1 − churn %) ^ months. Lost = starting − remaining.',
+  l:'Assumes the churn rate stays the same every month and no new subscribers join.',
+  q:[['What is churn?','The share of subscribers who cancel each month.'],['How do I reduce churn?','Regular contact, clear value and easy cancellation feedback help keep subscribers.']]},
+{ s:'currency-converter-calculator', t:'Currency Converter for Freelancers', c:'Money',
+  d:'Convert an amount between currencies using an exchange rate you enter.',
+  f:[['amt','Amount',100],['rate','Exchange rate (e.g. 1 USD = 0.92 EUR)',0.92]],
+  fn:v=>{need(v.amt>0,'Amount must be above zero.');need(v.rate>0,'Exchange rate must be above zero.');return [['Converted amount',m(v.amt*v.rate)],['Exchange rate used',m(v.rate)],['Original amount',m(v.amt)]]},
+  u:'Freelancers converting an invoice or rate into a client’s currency.',
+  x:'Converted amount = amount × exchange rate.',
+  l:'You enter the rate yourself — check your bank or card provider for the rate that will actually apply, including fees.',
+  q:[['Where do I get the rate?','Your bank, card provider or a currency site shows the current rate; add any fee on top.'],['Does it include fees?','No. Add transfer or conversion fees separately.']]}
 ];
 
 // --- self-test (build fails if a tool is wrong) ---
@@ -177,6 +193,9 @@ near(num(run('discount-calculator')[0][1]), 50, .001, 'discount');
 near(num(run('discount-calculator')[1][1]), 150, .001, 'discount final');
 near(num(run('tax-set-aside-calculator')[0][1]), 1000, .001, 'tax set-aside');
 near(num(run('tax-set-aside-calculator')[1][1]), 4000, .001, 'tax keep');
+near(num(run('subscription-churn-calculator')[0][1]), 54.04, .01, 'churn remaining');
+near(num(run('subscription-churn-calculator')[1][1]), 45.96, .01, 'churn lost');
+near(num(run('currency-converter-calculator')[0][1]), 92, .001, 'currency');
 try { run('break-even-calculator', { price: 5 }); throw Error('TEST FAIL guard'); } catch (e) { if (/TEST FAIL/.test(e.message)) throw e; }
 console.log('All tool self-tests passed.');
 
