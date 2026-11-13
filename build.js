@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path');
 const E = process.env, NAME = 'FreelanceMath';
 const SITE = (E.SITE_URL || 'https://example.com').replace(/\/$/, '');
-const MAIL = E.CONTACT_EMAIL || 'REPLACE_WITH_YOUR_EMAIL', GA = E.GA_ID || '', PUB = E.ADSENSE_PUB || '';
+const MAIL = E.CONTACT_EMAIL || 'REPLACE_WITH_YOUR_EMAIL', GA = E.GA_ID || 'G-BLB53L45TW', PUB = E.ADSENSE_PUB || '';
 const H = "var m=function(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})},p=function(n){return m(n)+'%'};var need=function(c,msg){if(!c)throw Error(msg)};";
 eval(H);
 
