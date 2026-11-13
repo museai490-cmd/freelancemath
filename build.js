@@ -103,7 +103,39 @@ const T = [
   u:'Anyone weighing a purchase against the time it takes to earn it.',
   x:'Hours = price ÷ hourly earnings. Working days = hours ÷ hours per working day.',
   l:'Use after-tax earnings for a realistic figure. Unpaid time spent working is not counted.',
-  q:[['Which hourly figure should I use?','Your take-home hourly amount after tax and expenses gives the most honest answer.'],['Is this a spending recommendation?','No. It only expresses a price in terms of your time.']]}
+  q:[['Which hourly figure should I use?','Your take-home hourly amount after tax and expenses gives the most honest answer.'],['Is this a spending recommendation?','No. It only expresses a price in terms of your time.']]},
+{ s:'late-fee-calculator', t:'Late Fee Calculator', c:'Business',
+  d:'Work out the late fee on an overdue invoice and the total now due.',
+  f:[['amt','Invoice amount',1000],['rate','Late-fee rate per month (%)',1.5],['days','Days overdue',45]],
+  fn:v=>{need(v.amt>0,'Invoice amount must be above zero.');need(v.rate>=0,'Late-fee rate cannot be negative.');need(v.days>=0,'Days overdue cannot be negative.');var f=v.amt*v.rate/100*v.days/30;return [['Late fee',m(f)],['Total due',m(v.amt+f)],['Fee per 30 days',m(v.amt*v.rate/100)]]},
+  u:'Freelancers chasing overdue invoices who need a clear late-fee figure to quote.',
+  x:'Late fee = invoice amount × monthly rate % × (days overdue ÷ 30). Total due = invoice amount + late fee.',
+  l:'Only charge a late fee if your contract or invoice terms allow it. Some jurisdictions cap late fees.',
+  q:[['Is the fee charged per month or per day?','Per month, pro-rated by day: 45 days counts as 1.5 months.'],['What if no late fee was agreed?','Then this tool only shows what the fee would be — check your contract before charging it.']]},
+{ s:'cash-runway-calculator', t:'Cash Runway Calculator', c:'Business',
+  d:'See how many months your savings last at your current monthly spending.',
+  f:[['sav','Cash savings',12000],['exp','Monthly expenses',3000]],
+  fn:v=>{need(v.exp>0,'Monthly expenses must be above zero.');need(v.sav>=0,'Savings cannot be negative.');return [['Cash runway (months)',m(v.sav/v.exp)],['Monthly expenses',m(v.exp)],['Cash savings',m(v.sav)]]},
+  u:'Freelancers and small businesses checking how long they can keep going without new income.',
+  x:'Runway (months) = cash savings ÷ monthly expenses.',
+  l:'Assumes spending stays flat and no new income arrives. Irregular bills will shorten the real runway.',
+  q:[['Does it count future income?','No — it shows how long savings alone last.'],['What counts as monthly expenses?','All regular outgoings: rent, subscriptions, food, insurance and business costs.']]},
+{ s:'utilization-rate-calculator', t:'Utilization Rate Calculator', c:'Business',
+  d:'Find what share of your available working hours you actually bill for.',
+  f:[['bill','Billable hours per week',25],['avail','Available hours per week',40]],
+  fn:v=>{need(v.avail>0,'Available hours must be above zero.');need(v.bill>=0,'Billable hours cannot be negative.');need(v.bill<=v.avail,'Billable hours cannot exceed available hours.');return [['Utilization rate',p(v.bill/v.avail*100)],['Non-billable hours',m(v.avail-v.bill)],['Billable hours',m(v.bill)]]},
+  u:'Freelancers tracking how much of their working week turns into invoiced time.',
+  x:'Utilization = billable hours ÷ available hours × 100. Non-billable hours = available − billable.',
+  l:'Available hours are the hours you could work, not 24 hours a day. Admin and pitching count as non-billable here.',
+  q:[['What is a good utilization rate?','Many freelancers aim for 60–75%; the rest goes to admin, marketing and learning.'],['Should holidays count?','No — use a typical working week, excluding holiday weeks.']]},
+{ s:'retainer-pricing-calculator', t:'Retainer Pricing Calculator', c:'Pricing',
+  d:'Price a monthly retainer from hours, hourly rate and a retainer discount.',
+  f:[['hrs','Hours per month',20],['rate','Hourly rate',50],['disc','Retainer discount (%)',10]],
+  fn:v=>{need(v.hrs>0,'Hours per month must be above zero.');need(v.rate>0,'Hourly rate must be above zero.');need(v.disc>=0&&v.disc<100,'Discount must be between 0% and 100%.');var f=v.hrs*v.rate,d=f*v.disc/100;return [['Full price',m(f)],['Discount',m(d)],['Monthly retainer',m(f-d)]]},
+  u:'Freelancers offering clients a fixed monthly block of hours at a discounted rate.',
+  x:'Full price = hours × hourly rate. Discount = full price × discount %. Retainer = full price − discount.',
+  l:'The discount is the only benefit priced here — it does not value the income stability a retainer brings.',
+  q:[['Why discount a retainer?','Clients pay for guaranteed hours in advance, so a small discount is common in exchange for that certainty.'],['What if hours go unused?','Agree in advance whether unused hours roll over, expire, or are refunded.']]}
 ];
 
 // --- self-test (build fails if a tool is wrong) ---
@@ -121,6 +153,10 @@ near(num(run('percentage-change-calculator')[1][1]), 25, .001, 'pct');
 near(num(run('invoice-total-calculator')[3][1]), 1166.4, .001, 'invoice');
 near(num(run('break-even-calculator')[1][1]), 334, .001, 'break-even');
 near(num(run('savings-goal-calculator', { rate: 0, cur: 1000, goal: 10000, mo: 18 })[0][1]), 500, .001, 'savings');
+near(num(run('late-fee-calculator')[0][1]), 22.5, .001, 'late fee');
+near(num(run('cash-runway-calculator')[0][1]), 4, .001, 'runway');
+near(num(run('utilization-rate-calculator')[0][1]), 62.5, .001, 'utilization');
+near(num(run('retainer-pricing-calculator')[2][1]), 900, .001, 'retainer');
 try { run('break-even-calculator', { price: 5 }); throw Error('TEST FAIL guard'); } catch (e) { if (/TEST FAIL/.test(e.message)) throw e; }
 console.log('All tool self-tests passed.');
 
